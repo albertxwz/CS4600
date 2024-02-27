@@ -252,10 +252,67 @@ function SimTimeStep( dt, positions, velocities, springs, stiffness, damping, pa
 	var forces = Array( positions.length ); // The total for per particle
 
 	// [TO-DO] Compute the total force of each particle
+	// init
+	for (var i = 0; i < positions.length; ++i) {
+		forces[i] = gravity.mul(particleMass);
+	}
+	// update spring force & damping force
+	springs.forEach(spring => {
+		const i = spring.p0, j = spring.p1, rest = spring.rest;
+		const d = positions[i].sub(positions[j]).unit();
+		const l = positions[i].sub(positions[j]).len();
+		// spring force
+		forces[i].inc(d.mul(stiffness * (rest - l)));
+		forces[j].inc(d.mul(stiffness * (l - rest)));
+
+		// damping force
+		forces[i].inc(d.mul(- damping * velocities[i].sub(velocities[j]).dot(d)));
+		forces[j].inc(d.mul(- damping * velocities[j].sub(velocities[i]).dot(d)));
+	});
 	
 	// [TO-DO] Update positions and velocities
+	for (var i = 0; i < positions.length; ++i) {
+		const a = forces[i].div(particleMass);
+		velocities[i] = velocities[i].add(a.mul(dt));
+		positions[i] = positions[i].add(velocities[i].mul(dt));
+	}
 	
 	// [TO-DO] Handle collisions
+	for (var i = 0; i < positions.length; ++i) {
+
+		if (positions[i].x < -1.0) {
+			const h = - 1.0 - positions[i].x;
+			positions[i].x = restitution * h - 1;
+			velocities[i].x = - velocities[i].x * restitution;
+		}
+		if (positions[i].x > 1.0) {
+			const h = positions[i].x - 1.0;
+			positions[i].x = 1.0 - restitution * h;
+			velocities[i].x = - velocities[i].x * restitution;
+		}
+
+		if (positions[i].y < -1.0) {
+			const h = - 1.0 - positions[i].y;
+			positions[i].y = restitution * h - 1;
+			velocities[i].y = - velocities[i].y * restitution;
+		}
+		if (positions[i].y > 1.0) {
+			const h = positions[i].y - 1.0;
+			positions[i].y = 1.0 - restitution * h;
+			velocities[i].y = - velocities[i].y * restitution;
+		}
+
+		if (positions[i].z < -1.0) {
+			const h = - 1.0 - positions[i].z;
+			positions[i].z = restitution * h - 1;
+			velocities[i].z = - velocities[i].z * restitution;
+		}
+		if (positions[i].z > 1.0) {
+			const h = positions[i].z - 1.0;
+			positions[i].z = 1.0 - restitution * h;
+			velocities[i].z = - velocities[i].z * restitution;
+		}
+	}
 	
 }
 
