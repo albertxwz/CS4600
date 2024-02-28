@@ -272,6 +272,7 @@ function SimTimeStep( dt, positions, velocities, springs, stiffness, damping, pa
 	
 	// [TO-DO] Update positions and velocities
 	for (var i = 0; i < positions.length; ++i) {
+		if (massSpring.selVert == i) continue;
 		const a = forces[i].div(particleMass);
 		velocities[i] = velocities[i].add(a.mul(dt));
 		positions[i] = positions[i].add(velocities[i].mul(dt));
